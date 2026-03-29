@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { AdminProductForm } from "@/components/admin/product-form";
+import { verifyAdminGate } from "@/lib/auth/admin-gate";
 
-export default function AdminNewProductPage() {
+export default async function AdminNewProductPage() {
+  if (!(await verifyAdminGate())) return null;
+
   return (
     <div>
       <Link

@@ -3,8 +3,11 @@ import { submitTogglePublished } from "@/app/actions/admin-toggle";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { formatKRW } from "@/lib/format";
 import { fetchAllProductsAdmin } from "@/lib/data/admin-products";
+import { verifyAdminGate } from "@/lib/auth/admin-gate";
 
 export default async function AdminHomePage() {
+  if (!(await verifyAdminGate())) return null;
+
   const products = await fetchAllProductsAdmin();
 
   return (

@@ -64,23 +64,19 @@ create trigger products_set_updated_at
 | `NEXT_PUBLIC_SUPABASE_URL` | 프로젝트 URL (Settings → API) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `anon` `public` 키 |
 | `SUPABASE_SERVICE_ROLE_KEY` | `service_role` 키 (**서버 전용**, 클라이언트/깃에 노출 금지) |
-| `SESSION_SECRET` | JWT 서명용 비밀값, **16자 이상** (예: `openssl rand -hex 32`) |
+| `SESSION_SECRET` | 회원 세션 + **관리자 게이트 쿠키** 서명용, **16자 이상** |
+| `ADMIN_ACCESS_CODE` | 시연용 관리자 접근 코드 (예: `1234`). `/admin`에서 입력 |
 
-`SESSION_SECRET`이 없거나 짧으면 `/admin` 미들웨어는 **503**을 반환합니다.
+`SESSION_SECRET`이 없거나 짧으면 관리자 코드 통과 후 쿠키 서명에 실패할 수 있습니다.
 
-## 관리자 계정 만들기
+## 관리자 진입 (시연용)
 
-1. 스토어에서 **회원가입**으로 일반 계정을 만듭니다.
-2. Supabase → **SQL Editor**에서 아이디를 본인 것으로 바꿔 실행합니다.
+1. 브라우저에서 `http://localhost:3000/admin` 을 직접 엽니다. (스토어 UI에는 관리 링크가 없습니다.)
+2. **접근 코드** 화면에 `.env.local`의 `ADMIN_ACCESS_CODE`와 동일한 값을 입력합니다.
+3. 맞으면 관리 화면으로 들어가며, **8시간** 동안 `path=/admin` 범위의 httpOnly 쿠키로 유지됩니다.
+4. 헤더의 **코드 잠금**으로 쿠키를 지우고 다시 코드 화면으로 돌아갈 수 있습니다.
 
-   ```sql
-   update public.profiles
-   set role = 'admin'
-   where username = '여기에_가입한_아이디';
-   ```
-
-3. **로그아웃 후 다시 로그인**하면 세션에 `admin` 역할이 반영됩니다.
-4. 브라우저 주소창에 `http://localhost:3000/admin` 을 입력해 상품을 등록합니다. **「공개」**를 켠 상품만 스토어에 노출됩니다.
+회원 **로그인·회원가입·profiles.role** 과 관리자 진입은 **완전히 분리**되어 있습니다. 상품 API는 통과 후에도 **service role**로만 쓰기합니다.
 
 ## 상품 이미지
 
@@ -96,18 +92,17 @@ create trigger products_set_updated_at
 | `/products` | 목록 + 카테고리 탭 (전체 / 시계 / 선글라스 / 모자) |
 | `/products/[slug]` | 상세 (갤러리·설명·사이즈) |
 | `/login`, `/signup` | 아이디·비밀번호 |
-| `/admin` | 상품 CRUD·공개 토글 (일반 헤더에 링크 없음) |
+| `/admin` | 접근 코드 입력 → 상품 CRUD·공개 토글 (스토어에 링크 없음) |
 
 ## 수정·추가된 주요 파일
 
 - `app/layout.tsx`, `app/globals.css` — 타이포·컬러 토큰
 - `app/(site)/layout.tsx`, `app/(site)/page.tsx`, `app/(site)/products/...`, `login`, `signup`
 - `app/admin/**` — 관리 UI
-- `app/actions/auth.ts`, `app/actions/admin-products.ts`, `app/actions/admin-toggle.ts`
+- `app/actions/auth.ts`, `app/actions/admin-products.ts`, `app/actions/admin-toggle.ts`, `app/actions/admin-gate.ts`
 - `components/site-header.tsx`, `site-footer.tsx`, `product-card.tsx`, `preview-strip.tsx`, `category-tabs.tsx`, `product-gallery.tsx`, `components/auth/*`, `components/admin/*`
 - `lib/supabase/server.ts`, `lib/supabase/admin.ts`, `lib/data/products.ts`, `lib/data/admin-products.ts`
-- `lib/auth/session.ts`, `password.ts`, `guard.ts`, `lib/types.ts`, `lib/format.ts`
-- `middleware.ts` — `/admin` 보호 (admin 역할 + 세션)
+- `lib/auth/session.ts`, `admin-gate.ts`, `password.ts`, `guard.ts`, `lib/types.ts`, `lib/format.ts`
 - `supabase/migrations/20250329000000_initial.sql`, `.env.example`
 
 ---

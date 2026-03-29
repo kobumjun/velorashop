@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth/guard";
+import { assertAdminGate } from "@/lib/auth/guard";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import type { ProductCategory } from "@/lib/types";
 import { CATEGORIES } from "@/lib/types";
@@ -23,7 +23,7 @@ function isCategory(v: string): v is ProductCategory {
 export type ProductFormState = { error?: string };
 
 export async function createProduct(_: ProductFormState, formData: FormData): Promise<ProductFormState> {
-  await requireAdmin();
+  await assertAdminGate();
   const admin = createAdminSupabase();
 
   const title = String(formData.get("title") ?? "").trim();
@@ -84,7 +84,7 @@ export async function createProduct(_: ProductFormState, formData: FormData): Pr
 }
 
 export async function updateProduct(_: ProductFormState, formData: FormData): Promise<ProductFormState> {
-  await requireAdmin();
+  await assertAdminGate();
   const admin = createAdminSupabase();
 
   const id = String(formData.get("id") ?? "");
@@ -147,7 +147,7 @@ export async function updateProduct(_: ProductFormState, formData: FormData): Pr
 }
 
 export async function deleteProduct(productId: string) {
-  await requireAdmin();
+  await assertAdminGate();
   const admin = createAdminSupabase();
   const { data: row } = await admin.from("products").select("slug").eq("id", productId).maybeSingle();
   await admin.from("products").delete().eq("id", productId);
@@ -157,7 +157,7 @@ export async function deleteProduct(productId: string) {
 }
 
 export async function togglePublished(productId: string, next: boolean) {
-  await requireAdmin();
+  await assertAdminGate();
   const admin = createAdminSupabase();
   const { data: row } = await admin.from("products").select("slug").eq("id", productId).maybeSingle();
   const { error } = await admin.from("products").update({ is_published: next }).eq("id", productId);

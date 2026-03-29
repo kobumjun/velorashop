@@ -1,9 +1,7 @@
-import { requireAdmin } from "@/lib/auth/guard";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import type { ProductWithImages } from "@/lib/types";
 
 export async function fetchAllProductsAdmin() {
-  await requireAdmin();
   const admin = createAdminSupabase();
   const { data, error } = await admin
     .from("products")
@@ -20,7 +18,6 @@ export async function fetchAllProductsAdmin() {
 }
 
 export async function fetchProductAdmin(id: string) {
-  await requireAdmin();
   const admin = createAdminSupabase();
   const { data, error } = await admin
     .from("products")

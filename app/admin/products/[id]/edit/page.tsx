@@ -2,10 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminProductForm } from "@/components/admin/product-form";
 import { fetchProductAdmin } from "@/lib/data/admin-products";
+import { verifyAdminGate } from "@/lib/auth/admin-gate";
 
 type Props = { params: Promise<{ id: string }> };
 
 export default async function AdminEditProductPage({ params }: Props) {
+  if (!(await verifyAdminGate())) return null;
+
   const { id } = await params;
   const product = await fetchProductAdmin(id);
   if (!product) notFound();
